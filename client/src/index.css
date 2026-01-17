@@ -1,6 +1,303 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * Blue & White Theme
+ * Primary: #1869E8 (vibrant blue)
+ * Using high contrast for readability
+ */
+:root {
+  --radius: 0.75rem;
+
+  /* Core colors - clean white background */
+  --background: #ffffff;
+  --foreground: #0f172a;
+
+  /* Cards - pure white with subtle distinction */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  /* Popover */
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  /* Primary - #1869E8 blue */
+  --primary: #1869E8;
+  --primary-foreground: #ffffff;
+
+  /* Secondary - light blue tint */
+  --secondary: #e8f1fd;
+  --secondary-foreground: #1e40af;
+
+  /* Muted - soft gray */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  /* Accent - lighter blue */
+  --accent: #dbeafe;
+  --accent-foreground: #1e40af;
+
+  /* Destructive */
+  --destructive: #ef4444;
+
+  /* Borders and inputs */
+  --border: #e2e8f0;
+  --input: #f8fafc;
+  --ring: #1869E8;
+
+  /* Charts */
+  --chart-1: #1869E8;
+  --chart-2: #3b82f6;
+  --chart-3: #60a5fa;
+  --chart-4: #93c5fd;
+  --chart-5: #bfdbfe;
+
+  /* Sidebar - slightly tinted */
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #1e293b;
+  --sidebar-primary: #1869E8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f1fd;
+  --sidebar-accent-foreground: #1e40af;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #1869E8;
+}
+
+.dark {
+  /* Dark mode with blue tints */
+  --background: #0c1222;
+  --foreground: #f1f5f9;
+
+  --card: #131c31;
+  --card-foreground: #f1f5f9;
+
+  --popover: #131c31;
+  --popover-foreground: #f1f5f9;
+
+  /* Primary stays vibrant in dark mode */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+
+  --secondary: #1e3a5f;
+  --secondary-foreground: #93c5fd;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --accent: #1e3a5f;
+  --accent-foreground: #93c5fd;
+
+  --destructive: #f87171;
+
+  --border: #1e3a5f;
+  --input: #1e293b;
+  --ring: #3b82f6;
+
+  --chart-1: #3b82f6;
+  --chart-2: #60a5fa;
+  --chart-3: #93c5fd;
+  --chart-4: #bfdbfe;
+  --chart-5: #dbeafe;
+
+  --sidebar: #0f1729;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e3a5f;
+  --sidebar-accent-foreground: #93c5fd;
+  --sidebar-border: #1e3a5f;
+  --sidebar-ring: #3b82f6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+  opacity: 0.7;
+}
+
+/* Fix syntax highlighter line backgrounds */
+.react-syntax-highlighter-line-number {
+  background: transparent !important;
+}
+
+pre code,
+pre code span {
+  background: transparent !important;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+/* Disable transitions on inputs to avoid lag */
+input, textarea, button {
+  transition: none;
+}
+
+input:focus, textarea:focus, button:hover, button:focus {
+  transition: box-shadow 150ms ease-out, border-color 150ms ease-out;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Selection styling */
+::selection {
+  background-color: rgba(24, 105, 232, 0.2);
+  color: inherit;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Remove focus outline from textarea inside chat input */
+textarea:focus-visible {
+  outline: none;
+}
+
+/* Prose styling for markdown content */
+.prose {
+  line-height: 1.7;
+}
+
+.prose code {
+  background-color: var(--muted);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.prose pre {
+  background-color: #1e293b;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Improve button states */
+button:active:not(:disabled) {
+  transform: scale(0.98);
 }
