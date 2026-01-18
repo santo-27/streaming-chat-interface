@@ -1,44 +1,20 @@
-// no real value is being added here. just utility functions to detect and parse content formats to fulfill the requirements mentioned.
+// Content format detection utilities
+// Uses the new content parser for rich content detection
 
-import type { ContentFormat } from '@/types'
+import type { ContentFormat, ParsedContent } from '@/types'
+import { parseContent, detectPrimaryFormat } from './contentParser'
 
+// Main function: parses content and returns both parsed structure and primary format
+export function analyzeContent(content: string): { parsed: ParsedContent; format: ContentFormat } {
+  const parsed = parseContent(content)
+  const format = detectPrimaryFormat(parsed)
+  return { parsed, format }
+}
+
+// Legacy function kept for backward compatibility
 export function detectFormat(content: string): ContentFormat {
-  const trimmed = content.trim()
-
-  // Check for JSON (objects or arrays)
-  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
-      (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-
-    // the return wont even execute if JSON.parse fails, there might be a better way tho..... :/
-    try {
-      JSON.parse(trimmed)
-      return 'json'
-    } catch (err) {
-      console.error('JSON parse error during format detection:', err);
-        // Not valid JSON, continue checking
-    }
-  }
-
-  // why should i do this when we are able to handle python code or stuff like that ?
-
-  // Check for markdown table (lines with | separators)
-  const lines = trimmed.split('\n')
-  if (lines.length >= 2) {
-    const hasTableSyntax = lines.every(line => {
-      const trimmedLine = line.trim()
-      return trimmedLine.includes('|') || trimmedLine.match(/^[-|:\s]+$/)
-    })
-    if (hasTableSyntax && lines[0].includes('|')) {
-      return 'table'
-    }
-  }
-
-  // Check for pure number
-  if (trimmed !== '' && !isNaN(Number(trimmed)) && trimmed.match(/^-?\d+\.?\d*$/)) {
-    return 'number'
-  }
-
-  return 'text'
+  const { format } = analyzeContent(content)
+  return format
 }
 
 export function parseJson(content: string): unknown {

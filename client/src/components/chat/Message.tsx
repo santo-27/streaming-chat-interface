@@ -44,7 +44,12 @@ export function Message({ message }: MessageProps) {
               isUser ? 'prose-invert' : 'dark:prose-invert',
               '[&>p]:my-0 [&>p:not(:last-child)]:mb-2'
             )}>
-              <ContentRenderer content={message.content} format={message.format} />
+              <ContentRenderer
+                content={message.content}
+                format={message.format}
+                parsedContent={message.parsedContent}
+                showContentBadges={!isUser && message.status === 'complete'}
+              />
             </div>
           )}
 

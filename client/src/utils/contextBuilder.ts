@@ -6,11 +6,12 @@ export function buildContext(
   conversation: Conversation,
   recentMessageCount: number = DEFAULT_RECENT_MESSAGES
 ): ConversationContext {
-  const messages = conversation.messages
+  // Filter out error messages - they should not be sent as context to the backend
+  const messages = conversation.messages.filter(msg => !msg.isError)
 
   // Take the last N messages for immediate context
   const recentMessages = messages.slice(-recentMessageCount).map(msg => ({
-    role: msg.role === 'user' ? 'user' as const : 'model' as const,
+    role: msg.role,
     content: msg.content,
   }))
 

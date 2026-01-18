@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ThemeProvider } from '@/context/ThemeContext'
 import { ChatProvider } from '@/context/ChatContext'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
@@ -9,6 +10,7 @@ export function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
+    <ThemeProvider>
     <ChatProvider>
       <div className="flex h-screen overflow-hidden bg-muted/30">
         {sidebarOpen && (
@@ -20,15 +22,16 @@ export function App() {
 
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 flex flex-col min-w-0 relative z-0">
           <Header
             sidebarOpen={sidebarOpen}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           />
           <MessageList />
           <ChatInput />
-        </div>
+        </main>
       </div>
     </ChatProvider>
+    </ThemeProvider>
   )
 }

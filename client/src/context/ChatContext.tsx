@@ -1,8 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useReducer, useRef, useEffect, type ReactNode } from 'react'
 import type { Message, Conversation, ChatState, ChatAction, ConversationSummary } from '@/types'
-import { detectFormat } from '@/utils/formatDetection'
-import { getHttpErrorMessage } from '@/utils/errorHandling'
+import { analyzeContent } from '@/utils/formatDetection'
 import { buildContext } from '@/utils/contextBuilder'
 
 const STORAGE_KEY = 'chat-conversations'
@@ -94,6 +93,20 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
                 messages: conv.messages.map((msg) =>
                   msg.id === action.payload.id ? { ...msg, ...action.payload } : msg
                 ),
+                updatedAt: Date.now(),
+              }
+            : conv
+        ),
+      }
+    }
+    case 'DELETE_MESSAGE': {
+      return {
+        ...state,
+        conversations: state.conversations.map((conv) =>
+          conv.id === state.activeConversationId
+            ? {
+                ...conv,
+                messages: conv.messages.filter((msg) => msg.id !== action.payload),
                 updatedAt: Date.now(),
               }
             : conv
@@ -214,16 +227,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         signal: abortControllerRef.current.signal,
       })
 
-      // Handle HTTP errors
+      // Handle HTTP errors (use error message from backend)
       if (!response.ok) {
-        const errorMessage = getHttpErrorMessage(response.status)
-
-        // Try to get more details from response body
         try {
           const errorBody = await response.json()
-          throw new Error(errorBody.error || errorMessage)
+          throw new Error(errorBody.error || 'Request failed. Please try again.')
         } catch {
-          throw new Error(errorMessage)
+          throw new Error('Request failed. Please try again.')
         }
       }
 
@@ -286,16 +296,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               // Handle error in SSE stream
               if (parsed.error) {
                 errorOccurred = true
-                dispatch({
-                  type: 'UPDATE_MESSAGE',
-                  payload: {
-                    id: assistantMessage.id,
-                    status: 'error',
-                    content: hasReceivedContent
-                      ? `${fullContent}\n\n---\n\n${parsed.error}`
-                      : parsed.error,
-                  },
-                })
+                // If we received partial content, keep it but mark as stopped
+                // Otherwise, delete the empty assistant message
+                if (hasReceivedContent) {
+                  dispatch({
+                    type: 'UPDATE_MESSAGE',
+                    payload: { id: assistantMessage.id, status: 'stopped' },
+                  })
+                } else {
+                  dispatch({ type: 'DELETE_MESSAGE', payload: assistantMessage.id })
+                }
+                // Add error as a separate message that won't be sent as context
+                const errorMessage: Message = {
+                  id: crypto.randomUUID(),
+                  role: 'assistant',
+                  content: parsed.error,
+                  status: 'error',
+                  format: 'text',
+                  timestamp: Date.now(),
+                  isError: true,
+                }
+                dispatch({ type: 'ADD_MESSAGE', payload: errorMessage })
                 dispatch({ type: 'SET_ERROR', payload: parsed.error })
               }
             } catch {
@@ -307,10 +328,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       // Only mark as complete if no error occurred
       if (!errorOccurred) {
-        const format = detectFormat(fullContent)
+        const { parsed, format } = analyzeContent(fullContent)
         dispatch({
           type: 'UPDATE_MESSAGE',
-          payload: { id: assistantMessage.id, status: 'complete', format },
+          payload: {
+            id: assistantMessage.id,
+            status: 'complete',
+            format,
+            parsedContent: parsed,
+          },
         })
       }
     } catch (err) {
@@ -320,16 +346,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           payload: { id: assistantMessage.id, status: 'stopped' },
         })
       } else {
-        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-        dispatch({
-          type: 'UPDATE_MESSAGE',
-          payload: {
-            id: assistantMessage.id,
-            status: 'error',
-            content: errorMessage,
-          },
-        })
-        dispatch({ type: 'SET_ERROR', payload: errorMessage })
+        const errorContent = err instanceof Error ? err.message : 'An unexpected error occurred'
+        // Delete the empty assistant message
+        dispatch({ type: 'DELETE_MESSAGE', payload: assistantMessage.id })
+        // Add error as a separate message that won't be sent as context
+        const errorMsg: Message = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: errorContent,
+          status: 'error',
+          format: 'text',
+          timestamp: Date.now(),
+          isError: true,
+        }
+        dispatch({ type: 'ADD_MESSAGE', payload: errorMsg })
+        dispatch({ type: 'SET_ERROR', payload: errorContent })
       }
     }
 

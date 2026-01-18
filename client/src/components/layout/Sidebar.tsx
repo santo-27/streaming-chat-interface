@@ -97,7 +97,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
               </svg>
             </div>
-            <span className="font-semibold text-slate-800 dark:text-white">Conversations</span>
+            <span className="font-semibold text-slate-800 dark:text-white">Petavue Assignment</span>
           </div>
           <button
             onClick={onClose}
@@ -120,8 +120,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-3 space-y-1">
+      <ScrollArea className="flex-1 overflow-hidden">
+        <div className="p-3 pr-4 space-y-1 pb-6">
           <p className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Recent
           </p>
@@ -166,16 +166,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      <div
+      <aside
         className={cn(
-          'hidden md:block h-full shrink-0 transition-[width] duration-300 ease-in-out overflow-hidden',
-          isOpen ? 'w-72' : 'w-0'
+          'hidden md:block h-full w-72 shrink-0 relative z-10 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-[margin] duration-300 ease-in-out',
+          isOpen ? 'ml-0' : '-ml-72'
         )}
       >
-        <div className="h-full w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+        <div className="h-full w-full flex flex-col">
           {renderSidebarContent()}
         </div>
-      </div>
+      </aside>
 
       <div
         className={cn(
