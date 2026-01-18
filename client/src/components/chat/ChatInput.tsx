@@ -1,6 +1,11 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { useChat } from '@/hooks/useChat'
 import { cn } from '@/lib/utils'
+import { Send, Square } from '@/components/shared/Icons'
+
+// Constants
+const TEXTAREA_MAX_HEIGHT = 150
+const TEXTAREA_MIN_HEIGHT = 28
 
 export function ChatInput() {
   const [input, setInput] = useState('')
@@ -15,11 +20,17 @@ export function ChatInput() {
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // just a UX improvement: submit on Enter, new line on Shift+Enter
+    // UX improvement: submit on Enter, new line on Shift+Enter
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit(e)
     }
+  }
+
+  const handleTextareaInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
+    const target = e.target as HTMLTextAreaElement
+    target.style.height = 'auto'
+    target.style.height = Math.min(target.scrollHeight, TEXTAREA_MAX_HEIGHT) + 'px'
   }
 
   return (
@@ -53,13 +64,9 @@ export function ChatInput() {
               )}
               style={{
                 height: 'auto',
-                minHeight: '28px'
+                minHeight: `${TEXTAREA_MIN_HEIGHT}px`
               }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement
-                target.style.height = 'auto'
-                target.style.height = Math.min(target.scrollHeight, 150) + 'px'
-              }}
+              onInput={handleTextareaInput}
             />
           </div>
 
@@ -70,10 +77,9 @@ export function ChatInput() {
                 type="button"
                 onClick={stopGeneration}
                 className="flex items-center justify-center w-11 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
+                aria-label="Stop generation"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <rect x="6" y="6" width="12" height="12" rx="2" />
-                </svg>
+                <Square className="w-5 h-5" fill="currentColor" />
               </button>
             ) : (
               <button
@@ -85,11 +91,9 @@ export function ChatInput() {
                     ? 'bg-gradient-to-r from-[#1869E8] to-[#2563eb] hover:from-[#1559cc] hover:to-[#1d4ed8] text-white hover:shadow-lg active:scale-95'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                 )}
+                aria-label="Send message"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 2L11 13" />
-                  <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                </svg>
+                <Send className="w-5 h-5" />
               </button>
             )}
           </div>

@@ -1,10 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useReducer, useRef, useEffect, type ReactNode } from 'react'
+import { createContext, useReducer, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import type { Message, Conversation, ChatState, ChatAction, ConversationSummary } from '@/types'
 import { analyzeContent } from '@/utils/formatDetection'
 import { buildContext } from '@/utils/contextBuilder'
 
+// Constants
 const STORAGE_KEY = 'chat-conversations'
+const TITLE_MAX_LENGTH = 30
+const STORAGE_DEBOUNCE_MS = 1000
 
 interface ChatContextValue extends ChatState {
   activeConversation: Conversation | null
@@ -18,6 +21,10 @@ interface ChatContextValue extends ChatState {
 }
 
 function loadFromStorage(): { conversations: Conversation[]; activeId: string | null } {
+  if (typeof window === 'undefined') {
+    return { conversations: [], activeId: null }
+  }
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
@@ -27,10 +34,8 @@ function loadFromStorage(): { conversations: Conversation[]; activeId: string | 
         activeId: data.activeConversationId || null,
       }
     }
-    //catch error and print to console
-  } catch (e) {
-    console.error('Error loading conversations from storage:', e);
-    // Ignore parse errors
+  } catch {
+    // Silently ignore parse errors - will start fresh
   }
   return { conversations: [], activeId: null }
 }
@@ -45,24 +50,22 @@ function createNewConversation(): Conversation {
   }
 }
 
-const stored = loadFromStorage()
+function createInitialState(): ChatState {
+  const stored = loadFromStorage()
+  const initialConversation = stored.conversations.length > 0 ? null : createNewConversation()
 
-// since we already have conversations, no need to create a new one
-const initialConversation = stored.conversations.length > 0 ? null : createNewConversation()
-
-const initialState: ChatState = {
-  conversations: initialConversation
-    ? [initialConversation, ...stored.conversations]
-    : stored.conversations,
-  activeConversationId: initialConversation?.id || stored.activeId || stored.conversations[0]?.id || null,
-  isLoading: false,
-  error: null,
+  return {
+    conversations: initialConversation
+      ? [initialConversation, ...stored.conversations]
+      : stored.conversations,
+    activeConversationId: initialConversation?.id || stored.activeId || stored.conversations[0]?.id || null,
+    isLoading: false,
+    error: null,
+  }
 }
 
 function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
-
-    // adding the message to the active conversation only
     case 'ADD_MESSAGE': {
       return {
         ...state,
@@ -72,9 +75,8 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
                 ...conv,
                 messages: [...conv.messages, action.payload],
                 updatedAt: Date.now(),
-                // Update title from first user message
                 title: conv.messages.length === 0 && action.payload.role === 'user'
-                  ? action.payload.content.slice(0, 30) + (action.payload.content.length > 30 ? '...' : '')
+                  ? action.payload.content.slice(0, TITLE_MAX_LENGTH) + (action.payload.content.length > TITLE_MAX_LENGTH ? '...' : '')
                   : conv.title,
               }
             : conv
@@ -82,7 +84,6 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
       }
     }
 
-    // im not really using this for now but might be useful later
     case 'UPDATE_MESSAGE': {
       return {
         ...state,
@@ -99,6 +100,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         ),
       }
     }
+
     case 'DELETE_MESSAGE': {
       return {
         ...state,
@@ -113,18 +115,23 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         ),
       }
     }
+
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload }
+
     case 'SET_ERROR':
       return { ...state, error: action.payload }
+
     case 'CREATE_CONVERSATION':
       return {
         ...state,
         conversations: [action.payload, ...state.conversations],
         activeConversationId: action.payload.id,
       }
+
     case 'SELECT_CONVERSATION':
       return { ...state, activeConversationId: action.payload }
+
     case 'DELETE_CONVERSATION': {
       const remaining = state.conversations.filter((c) => c.id !== action.payload)
       const needsNewActive = state.activeConversationId === action.payload
@@ -136,6 +143,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
           : state.activeConversationId,
       }
     }
+
     case 'UPDATE_CONVERSATION_TITLE':
       return {
         ...state,
@@ -143,6 +151,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
           conv.id === action.payload.id ? { ...conv, title: action.payload.title } : conv
         ),
       }
+
     case 'UPDATE_CONVERSATION_SUMMARY':
       return {
         ...state,
@@ -150,6 +159,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
           conv.id === action.payload.id ? { ...conv, summary: action.payload.summary } : conv
         ),
       }
+
     case 'TOGGLE_CONVERSATION_PRIVACY':
       return {
         ...state,
@@ -157,6 +167,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
           conv.id === action.payload ? { ...conv, isPrivate: !conv.isPrivate } : conv
         ),
       }
+
     default:
       return state
   }
@@ -165,31 +176,79 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 export const ChatContext = createContext<ChatContextValue | null>(null)
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(chatReducer, initialState)
+  // Lazy initialization - runs only once on mount
+  const [state, dispatch] = useReducer(chatReducer, null, createInitialState)
+
   const abortControllerRef = useRef<AbortController | null>(null)
+  const storageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const activeConversation = state.conversations.find(
-    (c) => c.id === state.activeConversationId
-  ) || null
-
-  // Persist to localStorage
-  // storing the active conversation id just for user experience purpose, will work even withhout this
+  // Use ref to track activeConversationId to avoid stale closures in async functions
+  const activeConversationIdRef = useRef(state.activeConversationId)
   useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        conversations: state.conversations,
-        activeConversationId: state.activeConversationId,
-      })
-    )
+    activeConversationIdRef.current = state.activeConversationId
+  }, [state.activeConversationId])
+
+  const activeConversation = useMemo(() =>
+    state.conversations.find((c) => c.id === state.activeConversationId) || null,
+    [state.conversations, state.activeConversationId]
+  )
+
+  // Use ref for activeConversation in async functions
+  const activeConversationRef = useRef(activeConversation)
+  useEffect(() => {
+    activeConversationRef.current = activeConversation
+  }, [activeConversation])
+
+  // Debounced persist to localStorage
+  useEffect(() => {
+    if (storageTimeoutRef.current) {
+      clearTimeout(storageTimeoutRef.current)
+    }
+
+    storageTimeoutRef.current = setTimeout(() => {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          conversations: state.conversations,
+          activeConversationId: state.activeConversationId,
+        })
+      )
+    }, STORAGE_DEBOUNCE_MS)
+
+    return () => {
+      if (storageTimeoutRef.current) {
+        clearTimeout(storageTimeoutRef.current)
+      }
+    }
   }, [state.conversations, state.activeConversationId])
 
-  const sendMessage = async (content: string) => {
-    if (!content.trim() || state.isLoading || !state.activeConversationId) return
+  // Flush storage on unmount
+  useEffect(() => {
+    return () => {
+      if (storageTimeoutRef.current) {
+        clearTimeout(storageTimeoutRef.current)
+        // Sync write on unmount to ensure data is saved
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            conversations: state.conversations,
+            activeConversationId: state.activeConversationId,
+          })
+        )
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const sendMessage = useCallback(async (content: string) => {
+    const currentActiveId = activeConversationIdRef.current
+    const currentActiveConversation = activeConversationRef.current
+
+    if (!content.trim() || !currentActiveId) return
 
     // Build context before adding user message
-    const context = activeConversation
-      ? buildContext(activeConversation)
+    const context = currentActiveConversation
+      ? buildContext(currentActiveConversation)
       : null
 
     // Add user message
@@ -240,7 +299,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // Check content type - handle non-SSE responses
       const contentType = response.headers.get('content-type') || ''
       if (contentType.includes('application/json')) {
-        // Server returned JSON instead of SSE (likely an error)
         const jsonResponse = await response.json()
         throw new Error(jsonResponse.error || 'Unexpected JSON response')
       }
@@ -269,10 +327,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
             try {
               const parsed = JSON.parse(data)
-              console.log('Parsed SSE chunk:', parsed);
 
-              // Handle text content
-              // live update of the message content
+              // Handle text content - live update of the message content
               if (parsed.text) {
                 hasReceivedContent = true
                 fullContent += parsed.text
@@ -282,12 +338,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 })
               }
 
-              // Handle updated summary from backend
-              if (parsed.updatedSummary && state.activeConversationId) {
+              // Handle updated summary from backend - use ref to get current ID
+              if (parsed.updatedSummary && activeConversationIdRef.current) {
                 dispatch({
                   type: 'UPDATE_CONVERSATION_SUMMARY',
                   payload: {
-                    id: state.activeConversationId,
+                    id: activeConversationIdRef.current,
                     summary: parsed.updatedSummary as ConversationSummary,
                   },
                 })
@@ -296,8 +352,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               // Handle error in SSE stream
               if (parsed.error) {
                 errorOccurred = true
-                // If we received partial content, keep it but mark as stopped
-                // Otherwise, delete the empty assistant message
                 if (hasReceivedContent) {
                   dispatch({
                     type: 'UPDATE_MESSAGE',
@@ -306,7 +360,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 } else {
                   dispatch({ type: 'DELETE_MESSAGE', payload: assistantMessage.id })
                 }
-                // Add error as a separate message that won't be sent as context
                 const errorMessage: Message = {
                   id: crypto.randomUUID(),
                   role: 'assistant',
@@ -347,9 +400,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         })
       } else {
         const errorContent = err instanceof Error ? err.message : 'An unexpected error occurred'
-        // Delete the empty assistant message
         dispatch({ type: 'DELETE_MESSAGE', payload: assistantMessage.id })
-        // Add error as a separate message that won't be sent as context
         const errorMsg: Message = {
           id: crypto.randomUUID(),
           role: 'assistant',
@@ -366,49 +417,59 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     dispatch({ type: 'SET_LOADING', payload: false })
     abortControllerRef.current = null
-  }
+  }, [])
 
-  const stopGeneration = () => {
+  const stopGeneration = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
     }
-  }
+  }, [])
 
-  const createConversation = () => {
+  const createConversation = useCallback(() => {
     const newConv = createNewConversation()
     dispatch({ type: 'CREATE_CONVERSATION', payload: newConv })
-  }
+  }, [])
 
-  const selectConversation = (id: string) => {
+  const selectConversation = useCallback((id: string) => {
     dispatch({ type: 'SELECT_CONVERSATION', payload: id })
-  }
+  }, [])
 
-  const deleteConversation = (id: string) => {
+  const deleteConversation = useCallback((id: string) => {
     dispatch({ type: 'DELETE_CONVERSATION', payload: id })
-  }
+  }, [])
 
-  const renameConversation = (id: string, title: string) => {
+  const renameConversation = useCallback((id: string, title: string) => {
     dispatch({ type: 'UPDATE_CONVERSATION_TITLE', payload: { id, title } })
-  }
+  }, [])
 
-  const toggleConversationPrivacy = (id: string) => {
+  const toggleConversationPrivacy = useCallback((id: string) => {
     dispatch({ type: 'TOGGLE_CONVERSATION_PRIVACY', payload: id })
-  }
+  }, [])
+
+  const contextValue = useMemo<ChatContextValue>(() => ({
+    ...state,
+    activeConversation,
+    sendMessage,
+    stopGeneration,
+    createConversation,
+    selectConversation,
+    deleteConversation,
+    renameConversation,
+    toggleConversationPrivacy,
+  }), [
+    state,
+    activeConversation,
+    sendMessage,
+    stopGeneration,
+    createConversation,
+    selectConversation,
+    deleteConversation,
+    renameConversation,
+    toggleConversationPrivacy,
+  ])
 
   return (
-    <ChatContext.Provider
-      value={{
-        ...state,
-        activeConversation,
-        sendMessage,
-        stopGeneration,
-        createConversation,
-        selectConversation,
-        deleteConversation,
-        renameConversation,
-        toggleConversationPrivacy,
-      }}
-    >
+    <ChatContext.Provider value={contextValue}>
       {children}
     </ChatContext.Provider>
   )

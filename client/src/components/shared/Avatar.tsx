@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { User, Bot } from '@/components/shared/Icons'
 
 interface AvatarProps {
   isUser: boolean
@@ -13,16 +14,9 @@ export function Avatar({ isUser }: AvatarProps) {
         : 'bg-gradient-to-br from-[#1869E8] to-[#2563eb]'
     )}>
       {isUser ? (
-        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-        </svg>
+        <User className="w-5 h-5 text-white" />
       ) : (
-        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-          <circle cx="8" cy="10" r="1"/>
-          <circle cx="12" cy="10" r="1"/>
-          <circle cx="16" cy="10" r="1"/>
-        </svg>
+        <Bot className="w-5 h-5 text-white" />
       )}
     </div>
   )

@@ -1,9 +1,9 @@
 import type { ContentSegment, ParsedContent, ContentFormat } from '@/types'
 
-// Regex patterns for markdown elements
-const ORDERED_LIST_REGEX = /^\d+\.\s+.+$/gm
-const UNORDERED_LIST_REGEX = /^[-*+]\s+.+$/gm
-const BLOCKQUOTE_REGEX = /^>\s+.+$/gm
+// Regex patterns for markdown elements (without 'g' flag for use with .test())
+const ORDERED_LIST_REGEX = /^\d+\.\s+.+$/m
+const UNORDERED_LIST_REGEX = /^[-*+]\s+.+$/m
+const BLOCKQUOTE_REGEX = /^>\s+.+$/m
 
 interface CodeBlock {
   fullMatch: string

@@ -5,6 +5,10 @@ import { Avatar } from '@/components/shared/Avatar'
 import { MessageStatus } from '@/components/chat/MessageStatus'
 import { StreamingIndicator } from '@/components/chat/StreamingIndicator'
 import { cn } from '@/lib/utils'
+import { Check, Copy } from '@/components/shared/Icons'
+
+// Constants
+const COPY_FEEDBACK_DURATION_MS = 2000
 
 interface MessageProps {
   message: MessageType
@@ -17,7 +21,7 @@ export function Message({ message }: MessageProps) {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS)
   }
 
   return (
@@ -67,19 +71,16 @@ export function Message({ message }: MessageProps) {
                 ? 'bg-green-500 text-white'
                 : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'
             )}
+            aria-label={copied ? 'Copied to clipboard' : 'Copy message'}
           >
             {copied ? (
               <span className="flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="w-3 h-3" />
                 Copied
               </span>
             ) : (
               <span className="flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
+                <Copy className="w-3 h-3" />
                 Copy
               </span>
             )}

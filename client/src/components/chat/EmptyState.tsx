@@ -1,3 +1,5 @@
+import { MessageSquareText } from '@/components/shared/Icons'
+
 export function EmptyState() {
   return (
     <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900">
@@ -7,12 +9,7 @@ export function EmptyState() {
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#1869E8]/20 to-blue-500/10 blur-2xl"></div>
           </div>
           <div className="relative w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#1869E8] to-[#2563eb] flex items-center justify-center shadow-xl shadow-blue-500/25">
-            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-              <circle cx="8" cy="10" r="1"/>
-              <circle cx="12" cy="10" r="1"/>
-              <circle cx="16" cy="10" r="1"/>
-            </svg>
+            <MessageSquareText className="w-10 h-10 text-white" />
           </div>
         </div>
 

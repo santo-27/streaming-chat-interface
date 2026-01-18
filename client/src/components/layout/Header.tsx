@@ -1,4 +1,5 @@
 import { useTheme } from '@/hooks/useTheme'
+import { Menu, ChevronsLeft, MessageSquareText, Sun, Moon } from '@/components/shared/Icons'
 
 interface HeaderProps {
   sidebarOpen: boolean
@@ -16,38 +17,17 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
           onClick={onToggleSidebar}
           className="p-2.5 -ml-2 hover:bg-white/20 rounded-xl active:scale-95 transition-colors"
           aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+          aria-expanded={sidebarOpen}
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            {sidebarOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
-          </svg>
+          {sidebarOpen ? (
+            <ChevronsLeft className="w-5 h-5" />
+          ) : (
+            <Menu className="w-5 h-5" />
+          )}
         </button>
         <div className="flex-1 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-              <circle cx="8" cy="10" r="1"/>
-              <circle cx="12" cy="10" r="1"/>
-              <circle cx="16" cy="10" r="1"/>
-            </svg>
+            <MessageSquareText className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight">Chat Assistant</h1>
@@ -59,23 +39,9 @@ export function Header({ sidebarOpen, onToggleSidebar }: HeaderProps) {
           aria-label={resolvedTheme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
         >
           {resolvedTheme === 'dark' ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
+            <Sun className="w-5 h-5" />
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-              />
-            </svg>
+            <Moon className="w-5 h-5" />
           )}
         </button>
       </div>

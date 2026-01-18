@@ -3,7 +3,7 @@ import { ThemeProvider } from '@/context/ThemeContext'
 import { ChatProvider } from '@/context/ChatContext'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
-import { MessageList } from '@/components/MessageList'
+import { MessageList } from '@/components/chat/MessageList'
 import { ChatInput } from '@/components/chat/ChatInput'
 
 export function App() {

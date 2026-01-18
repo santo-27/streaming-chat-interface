@@ -1,7 +1,7 @@
 import type { ContentFormat, ParsedContent } from '@/types'
 import { parseJson, formatNumber } from '@/utils/formatDetection'
 import { JsonViewer } from '@/components/content/JsonViewer'
-import { MarkdownContent } from '@/components/content/MarkdownContent'
+import { MarkdownRenderer } from '@/components/content/MarkdownRenderer'
 
 interface ContentRendererProps {
   content: string
@@ -60,7 +60,7 @@ export function ContentRenderer({ content, format, parsedContent, showContentBad
       return (
         <>
           {badges}
-          <MarkdownContent content={content} />
+          <MarkdownRenderer content={content} />
         </>
       )
     }
@@ -88,7 +88,7 @@ export function ContentRenderer({ content, format, parsedContent, showContentBad
   return (
     <>
       {badges}
-      <MarkdownContent content={content} />
+      <MarkdownRenderer content={content} />
     </>
   )
 }

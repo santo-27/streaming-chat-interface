@@ -3,6 +3,10 @@ import { Message } from '@/components/chat/Message'
 import { EmptyState } from '@/components/chat/EmptyState'
 import { useChat } from '@/hooks/useChat'
 
+// Constants
+const SCROLL_THRESHOLD_PX = 100
+const SCROLL_DEBOUNCE_MS = 150
+
 export function MessageList() {
   const { activeConversation, isLoading } = useChat()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -15,8 +19,7 @@ export function MessageList() {
   const isNearBottom = useCallback(() => {
     const container = scrollContainerRef.current
     if (!container) return true
-    const threshold = 100
-    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold
+    return container.scrollHeight - container.scrollTop - container.clientHeight < SCROLL_THRESHOLD_PX
   }, [])
 
   const handleScroll = useCallback(() => {
@@ -32,7 +35,7 @@ export function MessageList() {
       if (isNearBottom()) {
         isUserScrollingRef.current = false
       }
-    }, 150)
+    }, SCROLL_DEBOUNCE_MS)
   }, [isNearBottom])
 
   useEffect(() => {

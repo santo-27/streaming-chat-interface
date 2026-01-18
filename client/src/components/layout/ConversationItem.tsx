@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { Conversation } from '@/types'
 import { cn } from '@/lib/utils'
+import { MoreVertical, Pencil, Lock, Eye, Trash2 } from '@/components/shared/Icons'
 
 interface ChatMenuProps {
   conversation: Conversation
@@ -37,12 +38,10 @@ function ChatMenu({ conversation, isActive, onRename, onTogglePrivacy, onDelete 
             ? 'bg-white/10 hover:bg-white/20 text-white'
             : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300'
         )}
+        aria-label="Conversation options"
+        aria-expanded={isOpen}
       >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="6" r="1.5" />
-          <circle cx="12" cy="12" r="1.5" />
-          <circle cx="12" cy="18" r="1.5" />
-        </svg>
+        <MoreVertical className="w-4 h-4" />
       </button>
 
       {isOpen && (
@@ -55,9 +54,7 @@ function ChatMenu({ conversation, isActive, onRename, onTogglePrivacy, onDelete 
             }}
             className="w-full px-3 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <Pencil className="w-4 h-4" />
             Rename
           </button>
           <button
@@ -70,17 +67,12 @@ function ChatMenu({ conversation, isActive, onRename, onTogglePrivacy, onDelete 
           >
             {conversation.isPrivate ? (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+                <Eye className="w-4 h-4" />
                 Make Public
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+                <Lock className="w-4 h-4" />
                 Make Private
               </>
             )}
@@ -94,9 +86,7 @@ function ChatMenu({ conversation, isActive, onRename, onTogglePrivacy, onDelete 
             }}
             className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            <Trash2 className="w-4 h-4" />
             Delete
           </button>
         </div>
@@ -145,14 +135,9 @@ export function ConversationItem({
       onClick={() => !isRenaming && onSelect()}
     >
       {conversation.isPrivate && (
-        <svg
+        <Lock
           className={cn('w-4 h-4 shrink-0', isActive ? 'text-white/70' : 'text-slate-400')}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
+        />
       )}
 
       {isRenaming ? (
