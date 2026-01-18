@@ -5,6 +5,7 @@ import { useChat } from '@/hooks/useChat'
 
 // Constants
 const SCROLL_THRESHOLD_PX = 100
+// trying to avoid excessive scroll event handling
 const SCROLL_DEBOUNCE_MS = 150
 
 export function MessageList() {

@@ -52,13 +52,27 @@ function createNewConversation(): Conversation {
 
 function createInitialState(): ChatState {
   const stored = loadFromStorage()
-  const initialConversation = stored.conversations.length > 0 ? null : createNewConversation()
+
+  // Always ensure we have at least one conversation
+  let conversations = stored.conversations
+  let activeId = stored.activeId
+
+  // If no conversations exist, create a new one
+  if (conversations.length === 0) {
+    const newConversation = createNewConversation()
+    conversations = [newConversation]
+    activeId = newConversation.id
+  } else {
+    // If we have conversations but no valid activeId, select the first one
+    const isActiveIdValid = conversations.some(c => c.id === activeId)
+    if (!activeId || !isActiveIdValid) {
+      activeId = conversations[0].id
+    }
+  }
 
   return {
-    conversations: initialConversation
-      ? [initialConversation, ...stored.conversations]
-      : stored.conversations,
-    activeConversationId: initialConversation?.id || stored.activeId || stored.conversations[0]?.id || null,
+    conversations,
+    activeConversationId: activeId,
     isLoading: false,
     error: null,
   }

@@ -10,6 +10,9 @@ interface ContentRendererProps {
   showContentBadges?: boolean
 }
 
+
+// used for showing the bubble sorta thingy above the message.
+// keeping it here cos its a dumb component.
 function ContentBadges({ parsedContent }: { parsedContent: ParsedContent }) {
   const badges: { label: string; color: string }[] = []
 
@@ -84,7 +87,7 @@ export function ContentRenderer({ content, format, parsedContent, showContentBad
       </>
     )
   }
-
+  // almost always we get text
   return (
     <>
       {badges}

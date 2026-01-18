@@ -13,7 +13,7 @@ export function MessageStatus({ status }: MessageStatusProps) {
         <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Generation stopped</span>
       </div>
     )
-  }
+  } 
 
   if (status === 'error') {
     return (
